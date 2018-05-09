@@ -5,7 +5,7 @@
 # description:
 
 import pandas as pd
-
+import random
 def write_result(id,pre_lable):
     """
 
@@ -31,3 +31,17 @@ def cluster(data):
     # for i,each in enumerate(kmeans.labels_):
 
     return 0
+
+def create_rand(c):
+    global seed
+    return random.uniform(0,seed)
+
+def process_y0(data):
+    data0 = data[data.Pred==0]
+    global seed
+    seed = data[data.Pred!=0].min()
+    y = data0[['Pred']].apply(create_rand, axis=1)
+    data0.Pred = y
+    new_data = pd.concat([data0,data[data.Pred!=0]])
+
+    return new_data

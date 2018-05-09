@@ -5,20 +5,13 @@
 # description:
 import numpy as np
 import time
-x = range(100000000000)
+import pandas as pd
 
-
-def add(c):
-    return c ** 2
-
-start = time.clock()
-d1 = map(add, x)
-print(str(time.clock()-start))
-
-start = time.clock()
-d2 = [c ** 2 for c in x]
-print(str(time.clock()-start))
-
-start = time.clock()
-d3 = [add(c) for c in x]
-print(str(time.clock()-start))
+def pringf(c):
+    data = np.array(c) + 1
+    print(len(c))
+    print(c)
+x = [[1,2,3,4],[3,4,5,4],[5,6,5,4]]
+df = pd.DataFrame(x,columns=['a','b','c','d'])
+data = df.apply(pringf,axis=1)
+print()

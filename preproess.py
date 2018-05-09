@@ -16,41 +16,25 @@ def adjust_user_order(data_df):
     如果用户两次trip的时间差至少是5分钟
     :return:
     '''
-
     start = time.clock() # 计时开始
-    users = data_df.groupby(by=['TERMINALNO'])
-    new_data = None
-    data = []
+    data_df = data_df.sort_values(by='TIME').reset_index(drop=True)
+    data_df['TIME_DIFF'] = data_df[['TIME']].diff()
+    gd = data_df.groupby(by=['TERMINALNO','TRIP_ID'])
 
-    def sub(c):
-        return c - 1
+    t = []
+    for name, group in gd:
+        t.append(group.index[0])
+    data_df['TIME_DIFF'][t] = 0 # 每个用户的第一条数的时间差是0
 
-    for key_user, user in users:
-        user = user.sort_values(by='TIME').reset_index(drop=True)
-        group_diff = user.diff()#计算当前组和上一组之间的差
+    index = data_df[(data_df.TIME_DIFF >= 300)].index.tolist()
+    index.insert(0,0)
+    index.append(len(index))
 
-        # 计算时间间隔超过大的数据位置
-        index = group_diff[(group_diff.TIME >= 300)].index.tolist()
-        if 0 in index:
-            index.remove(0)
-        index = list(map(sub, index))# 数据位置
+    for i in range(1,len(index)):
+        data_df[index[i-1]:index[i]-1].TRIP_ID = i
 
-        new_data = None
-        trip_id = 1
-        index.insert(0,0)
-        index.append(len(user))
-        for i in range(1,len(index)):
-            one_trip = user.loc[index[i-1]:index[i]]
-            one_trip.TRIP_ID = trip_id
-            trip_id = trip_id + 1
-            if new_data is None:
-                new_data =  one_trip
-            else:
-                new_data = pd.concat([new_data,one_trip])
-
-    print(new_data.info())
-    print('adjust_user_order_t:' + str(time.clock() - start))
-    return new_data
+    print('adjust_user_order:' + str(time.clock() - start))
+    return data_df
 
 def adjust_y(data_df):
     # ['TERMINALNO', 'TIME','TRIP_ID','LONGITUDE','LATITUDE','DIRECTION','HEIGHT','SPEED','CALLSTATE','Y']
@@ -73,7 +57,7 @@ def adjust_y(data_df):
         new_data = pd.concat([new_data,selected_data])
         data_df = data_df[data_df.Y != maxv]
 
-    print('adjust_y_t:' + str(time.clock()-start))
+    print('adjust_y:' + str(time.clock()-start))
     return new_data
 
 def process_mistake_missing_duplicates(data_df):
@@ -101,7 +85,7 @@ def process_mistake_missing_duplicates(data_df):
         columns_name.remove('Y')
         no_repeat_data = data_df.drop_duplicates(columns_name)  # 去除重复数据
 
-    print('miss_vlaues_t:' + str(time.clock() - start))
+    print('process_mistake_missing_duplicates:' + str(time.clock() - start))
     return no_repeat_data
 
 def preproess_fun(train_df,test_df):
@@ -114,8 +98,8 @@ def preproess_fun(train_df,test_df):
     start = time.clock()
     columns_name = ['TERMINALNO', 'TIME', 'TRIP_ID', 'LONGITUDE', 'LATITUDE', 'DIRECTION', 'HEIGHT', 'SPEED',
                     'CALLSTATE', 'Y']
-    # train_df = adjust_user_order(train_df)
-    # test_df = adjust_user_order(test_df)
+    train_df = adjust_user_order(train_df)
+    test_df = adjust_user_order(test_df)
 
     train_df = process_mistake_missing_duplicates(train_df)
     test_df = process_mistake_missing_duplicates(test_df)
@@ -134,6 +118,6 @@ def preproess_fun(train_df,test_df):
     train_new = pd.concat([train_height, train_speed, train_df[columns_name].reset_index(drop=True)], axis=1) # 修改好的数据拼接成原数据
     test_new = pd.concat([test_height, test_speed, test_df[columns_name[:9]].reset_index(drop=True) ], axis=1) # 修改好的数据拼接成原数据
 
-    print('process_t:' + str(time.clock() - start))
+    print('preproess_fun:' + str(time.clock() - start))
     return train_new,test_new
 

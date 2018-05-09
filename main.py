@@ -45,22 +45,23 @@ def strategy(data):
     :return:
     '''
 
-    columns_name = ['TERMINALNO', 'TIME', 'TRIP_ID', 'LONGITUDE', 'LATITUDE', 'DIRECTION', 'HEIGHT', 'SPEED',
-                    'CALLSTATE', 'MINMAX_SPEED','MINMAX_HEIGHT','Y']
+    data = data.sort_values(by=['TERMINALNO','TRIP_ID']).reset_index(drop=True)
+
+    time_data = CF.timestamp_datetime(data[['TERMINALNO','TRIP_ID','TIME']]) #'TIREDT_DRIVING'，'DRIVING_HOURS'
+    lat_lon_data = CF.trip_lon_lat(data[['TERMINALNO','TRIP_ID','LONGITUDE','LATITUDE','CALLSTATE']])
+    #'MAX_LON','MAX_LAT','MIN_LON','MIN_LAT'，'MEAN_LON'，'MEAN_LAT'，RUN_RANGE，CALL_TIMES
+    trip_speed_data = CF.trip_speed(data[['TERMINALNO', 'TRIP_ID','SPEED']]) #TTD,MAX_SPEED,MIN_SPEED,MEAN_SPEED
 
     if 'Y' in data.columns.tolist():
-        # new_data = CF.direction(data[['TERMINALNO', 'TRIP_ID', 'DIRECTION', 'SPEED', 'CALLSTATE', 'Y']])
-        # new_data1 = CF.long_time_driving(data[['TERMINALNO', 'TIME', 'Y']])
-        # new_data2 = CF.long_time_driving1(data[['TERMINALNO', 'TIME', 'Y']])
-        new_data = CF.trip_speed(data[['TERMINALNO', 'TIME', 'TRIP_ID', 'LONGITUDE', 'LATITUDE'\
-                    , 'DIRECTION', 'CALLSTATE', 'MINMAX_SPEED','Y']])
+        direction_data = CF.direction(data[['TERMINALNO', 'TRIP_ID', 'DIRECTION', 'SPEED', 'CALLSTATE','HEIGHT', 'Y']])
+        #DIR_DIFFERENCE, 'SLOPE','SPEED_DIFFERENCE','HEIGHT_DIFFERENCE','CALL_LEFT','CALL_RIGHT'
 
     else:
-        # new_data = CF.direction(data[['TERMINALNO', 'TRIP_ID', 'DIRECTION', 'SPEED', 'CALLSTATE']])
-        new_data1 = CF.long_time_driving(data[['TERMINALNO', 'TIME']])
-        new_data2 = CF.long_time_driving1(data[['TERMINALNO', 'TIME']])
-        new_data = CF.trip_speed(data[['TERMINALNO', 'TIME', 'TRIP_ID', 'LONGITUDE', 'LATITUDE' \
-            , 'DIRECTION', 'CALLSTATE', 'MINMAX_SPEED']])
+        direction_data = CF.direction(data[['TERMINALNO', 'TRIP_ID', 'DIRECTION', 'SPEED', 'CALLSTATE','HEIGHT']])
+
+    new_data1 = pd.concat([direction_data,trip_speed_data],axis=1).reset_index(drop=True).reset_index(drop=True)
+    new_data2 = pd.concat([time_data,lat_lon_data],axis=1).reset_index(drop=True)
+    new_data = pd.concat([new_data1,new_data2],axis=1)
 
     # CT.evaluate_feature('TTD', new_data)# 评价TTD特征的相关性
     # CT.evaluate_feature('STOPN', new_data)  # 评价TTD特征的相关性
@@ -72,9 +73,9 @@ def process():
     # 原始属性的名称
     columns_name = ['TERMINALNO','TIME','TRIP_ID','LONGITUDE','LATITUDE','DIRECTION','HEIGHT','SPEED','CALLSTATE','Y']
     # 新创造特征的名称
-    features_name = ['MINMAX_SPEED','MINMAX_HEIGHT','TTD','STOPN','STOPR',' DIRDIFFERENCE' \
-                    ,'MAX_START_SPEED','MAX_STOP_SPEED','MAX_LAT','MAX_LON','MAX_SPEED','MIN_SPEED'
-                    ,'CALLSTARTN']
+    features_name = ['TIREDT_DRIVING','DRIVING_HOURS','MAX_LON','MAX_LAT','MIN_LON','MIN_LAT'\
+            ,'MEAN_LON','MEAN_LAT','RUN_RANGE','CALL_TIMES','DIR_DIFFERENCE', 'SLOPE'\
+            ,'SPEED_DIFFERENCE','HEIGHT_DIFFERENCE','CALL_LEFT','CALL_RIGHT']
 
     train_df = pd.read_csv(path_train)
     test_df = pd.read_csv(path_test)
@@ -91,8 +92,8 @@ def process():
 
         from sklearn.tree import DecisionTreeRegressor# 决策树分类器
         estimator = DecisionTreeRegressor()
-        estimator.fit(train_data[features_name[6:]].values, train_data['Y'].values)
-        predict_label = estimator.predict(origin_test_data[features_name[6:]].values)
+        estimator.fit(train_data[features_name].values, train_data['Y'].values)
+        predict_label = estimator.predict(origin_test_data[features_name].values)
 
         test_data['Pred'] = predict_label
 
@@ -116,6 +117,7 @@ def process():
             final_res['Pred' + str(iteration)] = test_data['Pred']
 
     final_max_res = final_res[['TERMINALNO','Pred']].groupby('TERMINALNO').max()
+    final_max_res = CT.process_y0(final_max_res)
     CT.write_result(list(final_res['TERMINALNO'].drop_duplicates().values), final_max_res['Pred'].values)
 
     # 不交叉预测结果

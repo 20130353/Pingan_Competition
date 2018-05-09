@@ -31,19 +31,19 @@ def kmeans(data):
         for i in range(k):
             cen_data = data[centroids == i].reset_index(drop=True)
             rand_arr = np.random.permutation(len(cen_data))
-        #
-        #     print('---' + str(i) + 'class samples')
-        #     if len(cen_data) > 5:
-        #         for j in range(5):
-        #             print(cen_data.loc[rand_arr[j]])
-        #     else:
-        #         for j in range(len(cen_data)):
-        #             print(cen_data.loc[rand_arr[j]])
-        #
-        # print('------3.each class centrids')
-        # centroids = clf.cluster_centers_
-        # for i in range(k):
-        #     print('---' + str(i) + ' sample:' + str(centroids[i]))
+
+            print('---' + str(i) + 'class samples')
+            if len(cen_data) > 5:
+                for j in range(5):
+                    print(cen_data.loc[rand_arr[j]])
+            else:
+                for j in range(len(cen_data)):
+                    print(cen_data.loc[rand_arr[j]])
+
+        print('------3.each class centrids')
+        centroids = clf.cluster_centers_
+        for i in range(k):
+            print('---' + str(i) + ' sample:' + str(centroids[i]))
 
 def process():
     # 原始属性的名称
@@ -55,7 +55,7 @@ def process():
 
     noy_df = train_df[train_df.Y == 0]
     print('Y=0')
-    kmeans(noy_df)
+    kmeans(noy_df[['TIME','LONGITUDE','LATITUDE','DIRECTION','HEIGHT','SPEED','CALLSTATE']])
 
     # y_df = train_df[train_df.Y != 0]
     # print('Y>0')
