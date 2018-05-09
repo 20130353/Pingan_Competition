@@ -15,7 +15,7 @@ def adjust_user_order(data_df):
     gd = data_df.groupby(by=['TERMINALNO','TRIP_ID'])
     t = []
     for name, group in gd:
-        t.append(group.index[0])
+        t.append(group.index[0]) 
     data_df.loc[t].TIME_DIFF = 0 # 每个用户的第一条数的时间差是0
 
     index = data_df[(data_df.TIME_DIFF >= 300)].index.tolist()
@@ -88,8 +88,8 @@ def preproess_fun(train_df,test_df):
     start = time.clock()
     columns_name = ['TERMINALNO', 'TIME', 'TRIP_ID', 'LONGITUDE', 'LATITUDE', 'DIRECTION', 'HEIGHT', 'SPEED',
                     'CALLSTATE', 'Y']
-    train_df = adjust_user_order(train_df)
-    test_df = adjust_user_order(test_df)
+    # train_df = adjust_user_order(train_df)#内存溢出
+    # test_df = adjust_user_order(test_df)
 
     train_df = process_mistake_missing_duplicates(train_df)
     test_df = process_mistake_missing_duplicates(test_df)
