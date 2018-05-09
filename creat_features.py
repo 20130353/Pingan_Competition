@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# author: sunmengxin
-# time: 2018/4/21 19:05
-# file: creat_features.py
-# description:
 import numpy as np
 import pandas as pd
 import time
@@ -48,7 +43,7 @@ def trip_lon_lat(data_df):#['TERMINALNO','TRIP_ID,''SPEED','LONGITUDE','LATITUDE
     new_data['RUN_RANGE'] = run_range
     new_data['CALL_TIMES'] = data_df[['TERMINALNO', 'TRIP_ID', 'CALLSTATE']].sum().CALLSTATE # 打电话总次数
 
-    print('lat_lon:' + str(time.clock() - start))
+    print('lat_lon:' +  str(round(time.clock() - start,2)))
     return new_data
 
 def trip_speed(data): #['TERMINALNO','TRIP_ID','SPEED']
@@ -105,7 +100,7 @@ def trip_speed(data): #['TERMINALNO','TRIP_ID','SPEED']
     new_data['MIN_SPEED'] = list(group_data.max().SPEED) # 最小速度
     new_data['MEAN_SPEED'] = list(group_data.mean().SPEED)  # 最小速度
 
-    print('trip_speed:' + str(time.clock()-start))
+    print('trip_speed:' +  str(round(time.clock() - start,2)))
     return new_data
 
 
@@ -142,7 +137,7 @@ def long_time_driving(strategy_TIME):# ['TERMINALNO','TIME']
                     trip_length_MAX = trip_length
                 trip_length = 0
 
-    print('long_time_driving:' + str(time.clock()-start))
+    print('long_driving:' +  str(round(time.clock() - start,2)))
     return time_space
 
 # 这段待修改
@@ -176,7 +171,6 @@ def long_time_driving(strategy_TIME):# ['TERMINALNO','TIME']
 #                 new_data = pd.concat([new_data, one_dis])
 #
 #         new_data[new_data.TERMINALNO == user.TERMINALNO]['MOST_TIME'] = most_time
-#     print('long_time_driving1:' + str(time.clock() - start))
 #     return new_data
 
 
@@ -302,7 +296,7 @@ def direction(data):# ['TERMINALNO','TRIP_ID','DIRECTION','SPEED','CALLSTATE','H
         data_df['Y'] = data['Y']
 
     new_data = data_df.groupby(by=['TERMINALNO','TRIP_ID']).mean().reset_index()
-    print('direction:' + str(time.clock() - start))
+    print('direction:' +  str(round(time.clock() - start,2)))
     return new_data
 
 
@@ -341,6 +335,6 @@ def timestamp_datetime(data): #['TERMINALNO','TRIP_ID','TIME']
 
     final_new_data = pd.DataFrame({'TIREDT_DRIVING':final_data.TIREDT_DRIVING, 'DRIVING_HOURS':final_data1.DRIVING_HOURS})
 
-    print('timestamp_datetime:' + str(time.clock()-start))
+    print('time_features:' +  str(round(time.clock() - start,2)))
 
     return final_new_data

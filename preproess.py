@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-# author: sunmengxin
-# time: 2018/4/24 9:30
-# file: preproess.py
-# description: 数据预处理文件
-
 import pandas as pd
-import numpy as np
-import math
 import time
 
 def adjust_user_order(data_df):
@@ -19,21 +11,21 @@ def adjust_user_order(data_df):
     start = time.clock() # 计时开始
     data_df = data_df.sort_values(by='TIME').reset_index(drop=True)
     data_df['TIME_DIFF'] = data_df[['TIME']].diff()
-    gd = data_df.groupby(by=['TERMINALNO','TRIP_ID'])
 
+    gd = data_df.groupby(by=['TERMINALNO','TRIP_ID'])
     t = []
     for name, group in gd:
         t.append(group.index[0])
-    data_df['TIME_DIFF'][t] = 0 # 每个用户的第一条数的时间差是0
+    data_df.loc[t].TIME_DIFF = 0 # 每个用户的第一条数的时间差是0
 
     index = data_df[(data_df.TIME_DIFF >= 300)].index.tolist()
     index.insert(0,0)
     index.append(len(index))
 
     for i in range(1,len(index)):
-        data_df[index[i-1]:index[i]-1].TRIP_ID = i
+        data_df.loc[index[i-1]:index[i]-1].TRIP_ID = i
 
-    print('adjust_user_order:' + str(time.clock() - start))
+    print('adjust_user_order:' + str(round(time.clock() - start,2)))
     return data_df
 
 def adjust_y(data_df):
@@ -46,7 +38,6 @@ def adjust_y(data_df):
     if data_df.Y.max() < 300:
         return data_df
 
-    print('adjust_y_start')
     new_data =data_df[data_df.Y >= 300]
     new_data.Y = 148
     data_df = data_df[data_df.Y < 300]
@@ -57,7 +48,7 @@ def adjust_y(data_df):
         new_data = pd.concat([new_data,selected_data])
         data_df = data_df[data_df.Y != maxv]
 
-    print('adjust_y:' + str(time.clock()-start))
+    print('adjust_y:' +  str(round(time.clock() - start,2)))
     return new_data
 
 def process_mistake_missing_duplicates(data_df):
@@ -85,12 +76,11 @@ def process_mistake_missing_duplicates(data_df):
         columns_name.remove('Y')
         no_repeat_data = data_df.drop_duplicates(columns_name)  # 去除重复数据
 
-    print('process_mistake_missing_duplicates:' + str(time.clock() - start))
+    print('missing_value:' +  str(round(time.clock() - start,2)))
     return no_repeat_data
 
 def preproess_fun(train_df,test_df):
     """
-
     :param data: type-array
     :param label: type-array
     :return: data,label
@@ -118,6 +108,6 @@ def preproess_fun(train_df,test_df):
     train_new = pd.concat([train_height, train_speed, train_df[columns_name].reset_index(drop=True)], axis=1) # 修改好的数据拼接成原数据
     test_new = pd.concat([test_height, test_speed, test_df[columns_name[:9]].reset_index(drop=True) ], axis=1) # 修改好的数据拼接成原数据
 
-    print('preproess_fun:' + str(time.clock() - start))
+    print('preproess_fun:' +  str(round(time.clock() - start,2)))
     return train_new,test_new
 

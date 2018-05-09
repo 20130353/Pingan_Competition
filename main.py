@@ -2,12 +2,10 @@
 
 # this file uses multi cross input
 
-import os
-import csv
+import warnings
 import pandas as pd
 import numpy as np
 import time
-
 import copy
 
 import creat_features as CF
@@ -45,6 +43,7 @@ def strategy(data):
     :return:
     '''
 
+    start = time.clock()
     data = data.sort_values(by=['TERMINALNO','TRIP_ID']).reset_index(drop=True)
 
     time_data = CF.timestamp_datetime(data[['TERMINALNO','TRIP_ID','TIME']]) #'TIREDT_DRIVING'，'DRIVING_HOURS'
@@ -67,6 +66,7 @@ def strategy(data):
     # CT.evaluate_feature('STOPN', new_data)  # 评价TTD特征的相关性
     # CT.evaluate_feature('STOPR', new_data)  # 评价TTD特征的相关性
 
+    print('strategy:' +  str(round(time.clock() - start,2)))
     return new_data
 
 def process():
@@ -120,20 +120,8 @@ def process():
     final_max_res = CT.process_y0(final_max_res)
     CT.write_result(list(final_res['TERMINALNO'].drop_duplicates().values), final_max_res['Pred'].values)
 
-    # 不交叉预测结果
-    # origin_train_data = strategy(origin_train_data)
-    # origin_test_data = strategy(origin_test_data)
-    # test_data = origin_test_data[['TERMINALNO']]
-    # from sklearn.tree import DecisionTreeRegressor  # 决策树分类器
-    # estimator = DecisionTreeRegressor()
-    # estimator.fit(origin_train_data[features_name[2:]].values, origin_train_data['Y'].values)
-    # predict_label = estimator.predict(origin_test_data[features_name[2:]].values)
-    # test_data['Pred'] = predict_label
-    # final_max_res = test_data[['TERMINALNO','Pred']].groupby('TERMINALNO').max()
-    # CT.write_result(list(test_data['TERMINALNO'].drop_duplicates().values), final_max_res['Pred'].values)
-
 if __name__ == "__main__":
     start = time.clock()# 计时器
+    warnings.filterwarnings("ignore")
     process()
-    elapsed = (time.clock() - start)
-    print('whole time:' + str(elapsed))
+    print('whole_time:' +  str(round(time.clock() - start,2)))

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-# author: sunmengxin
-# time: 2018/4/24 9:23
-# file: common_tool.py
-# description:
-
 import pandas as pd
 import random
 def write_result(id,pre_lable):
@@ -22,15 +16,7 @@ def evaluate_feature(feature_name,data):
     train_data = data.drop(feature_name,axis=1)
     from sklearn.linear_model import LinearRegression
     regr = LinearRegression().fit(train_data,data[feature_name].values)
-    print(feature_name + '_cor:' + str(regr.coef_[index]))
-
-def cluster(data):
-    # from sklearn.cluster import KMeans
-    # kmeans = KMeans(n_clusters=3).fit(data[data.Y==0].values)
-    # print(kmeans.cluster_centers_)
-    # for i,each in enumerate(kmeans.labels_):
-
-    return 0
+    # print(feature_name + '_cor:' + str(regr.coef_[index]))
 
 def create_rand(c):
     global seed
