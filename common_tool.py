@@ -16,7 +16,7 @@ def evaluate_feature(feature_name,data):
     train_data = data.drop(feature_name,axis=1)
     from sklearn.linear_model import LinearRegression
     regr = LinearRegression().fit(train_data,data[feature_name].values)
-    # print(feature_name + '_cor:' + str(regr.coef_[index]))
+    print(feature_name + '_cor:' + str(regr.coef_[index]))
 
 def create_rand(c):
     global seed
@@ -29,5 +29,4 @@ def process_y0(data):
     y = data0[['Pred']].apply(create_rand, axis=1)
     data0.Pred = y
     new_data = pd.concat([data0,data[data.Pred!=0]])
-
     return new_data
