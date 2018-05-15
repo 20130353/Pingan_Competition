@@ -18,6 +18,10 @@ def evaluate_feature(feature_name,data):
     regr = LinearRegression().fit(train_data,data[feature_name].values)
     print(feature_name + '_cor:' + str(regr.coef_[index]))
 
+def print_na(data):
+    for each in data.columns.tolist():
+        print(each + ' na num is %d' %sum(data[each].isna()))
+
 def create_rand(c):
     global seed
     return random.uniform(0,seed)
