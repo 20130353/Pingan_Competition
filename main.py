@@ -112,7 +112,10 @@ def strategy(data):
     data.loc[(data.DIR_DIF >= 180), 'DIR_DIF'] = \
         data.loc[(data.DIR_DIF >= 180), 'DIR_DIF'] - 360
     trip_index = data.groupby(by=['ID', 'TRIP_ID']).apply(lambda x: x.index[0]).sort_values()
-    data.loc[trip_index,:] = 0
+    temp = data
+    data.loc[trip_index,'SPEED_DIF'] = 0
+    data.loc[trip_index,'HEIGHT_DIF'] = 0
+    data.loc[trip_index,'DIR_DIF'] = 0
     # print(data.info(memory_usage='deep'))
     # print('6')
 
@@ -139,11 +142,14 @@ def strategy(data):
 
     #用户ID & Trip_ID
     group_data = data.groupby(by=['ID', 'TRIP_ID'])
-    max_group_data = group_data.max().astype('float16')
-    min_group_data = group_data.min().astype('float16')
-    mean_group_data = group_data.mean().astype('float16')
-    sum_group_data = group_data.sum().astype('float16')
+    max_group_data = group_data.max()
+    min_group_data = group_data.min()
+    mean_group_data = group_data.mean()
+    sum_group_data = group_data.sum()
+    var_group_data = group_data.var()
     # print('11')
+
+    #高度，方向，坡度需要float32，其他的需要float16
 
     max_data = max_group_data[['TIRED_DRIVING','LONGITUDE','LATITUDE','SPEED'\
         ,'SPEED_DIF','HEIGHT_DIF','DIR_DIF','SLOPE','SHAPE_TURN','CALL_LEFT','CALL_RIGHT']]
@@ -160,12 +166,15 @@ def strategy(data):
     mean_data.columns = ['MEAN_TIRED_DRIVING', 'MEAN_LON', 'MEAN_LAT', 'MEAN_SPEED' \
         , 'MEAN_SPEED_DIF', 'MEAN_HEIGHT_DIF', 'MEAN_DIR_DIF', 'MEAN_SLOPE']
 
-    sum_data = sum_group_data[['CALLSTATE','SHAPE_TURN','CALL_LEFT','CALL_RIGHT','TIRED_DRIVING']]
+    sum_data = sum_group_data[['CALLSTATE','SHAPE_TURN','CALL_LEFT','CALL_RIGHT','TIRED_DRIVING']].astype('int8')
     sum_data.columns = ['SUM_CALL','SUM_SHAPE_TURN','SUM_CALL_LEFT','SUM_CALL_RIGHT','SUM_TIRED_DRIVING']
 
-    new_data = pd.concat([max_data,min_data,mean_data,sum_data],axis=1).astype('float16')
+    var_data = var_group_data[['CALLSTATE', 'SHAPE_TURN', 'CALL_LEFT', 'CALL_RIGHT', 'TIRED_DRIVING']]
+    var_data.columns = ['VAR_CALL', 'VAR_SHAPE_TURN', 'VAR_CALL_LEFT', 'VAR_CALL_RIGHT', 'VAR_TIRED_DRIVING']
+
+    new_data = pd.concat([max_data,min_data,mean_data,sum_data,var_data],axis=1)
     del max_data,min_data,mean_data,sum_data
-    # print(new_data.info(memory_usage='deep'))
+    print(new_data.info(memory_usage='deep'))
     # print('12')
 
     new_data['TTD'] = sum_group_data.SPEED.astype('float32') * 50 / 3  # 行驶路程
@@ -197,30 +206,30 @@ def process():
     del  train_df
 
     #test
-    print('test')
-    test_df = pd.read_csv(path_test)
-    origin_test_data = strategy(test_df)
-    origin_test_data.fillna(0)#防止结果出现na
-    del test_df
-
-    # 6:1 训练分类器
-    print('classifier')
-    test_data = origin_test_data[['ID']]
-    final_res = test_data[['ID']]
-    estimator = DecisionTreeRegressor()# 决策树分类器
-    for iteration in range(6):# Y=0-6:1-Y!=0
-        train_data = split_users(origin_train_data, iteration=iteration)#分割训练样本
-        estimator.fit(train_data.drop('Y',axis=1), train_data['Y'])
-        predict_label = estimator.predict(origin_test_data.values)
-        if iteration == 0:
-            final_res['Pred'] = predict_label
-        else:
-            final_res['Pred'] = final_res['Pred'].values + predict_label
-    final_res['Pred'] = final_res.Pred.values / 6
-    final_max_res = final_res[['ID','Pred']].groupby('ID').max()
-    final_max_res = CT.process_y0(final_max_res) # 处理结果为0的y值
-    result = final_max_res.rename(columns={'item': 'Id', 'Pred': 'Pred'})
-    result.to_csv(path_result_out, header=True, index=False)
+    # print('test')
+    # test_df = pd.read_csv(path_test)
+    # origin_test_data = strategy(test_df)
+    # origin_test_data.fillna(0)#防止结果出现na
+    # del test_df
+    #
+    # # 6:1 训练分类器
+    # print('classifier')
+    # test_data = origin_test_data[['ID']]
+    # final_res = test_data[['ID']]
+    # estimator = DecisionTreeRegressor()# 决策树分类器
+    # for iteration in range(6):# Y=0-6:1-Y!=0
+    #     train_data = split_users(origin_train_data, iteration=iteration)#分割训练样本
+    #     estimator.fit(train_data.drop('Y',axis=1), train_data['Y'])
+    #     predict_label = estimator.predict(origin_test_data.values)
+    #     if iteration == 0:
+    #         final_res['Pred'] = predict_label
+    #     else:
+    #         final_res['Pred'] = final_res['Pred'].values + predict_label
+    # final_res['Pred'] = final_res.Pred.values / 6
+    # final_max_res = final_res[['ID','Pred']].groupby('ID').max()
+    # final_max_res = CT.process_y0(final_max_res) # 处理结果为0的y值
+    # result = final_max_res.rename(columns={'item': 'Id', 'Pred': 'Pred'})
+    # result.to_csv(path_result_out, header=True, index=False)
 
 if __name__ == "__main__":
     start = time.clock()# 计时器
