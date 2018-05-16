@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
-x =[[1,2.01010101010010,3],[3,4,5],[3,4,5]]
+x =[[1,2,3],[3,4,5],[3,4,5]]
 df = pd.DataFrame(x,columns=['a','b','c'])
-df.loc[1,'a']=1000
-df.loc[1:2,'b'] = 2000
-df = df.loc[:,['a','b']].astype('int8')
-df.info(memory_usage='deep')
-print(df)
+def fun(x):
+    x.info()
+    print(x.columns)
+    print(x)
 
-print(np.zeros(df.shape[0]))
+print(df.groupby(by=['a','b']))
+print('fasdfadsdfa')
+# data = df.groupby(by=['a','b']).apply(fun(x))
+# data = df.groupby(by=['a','b']).transform(fun(x))
+data = df.groupby(by=['a','b']).agg(fun(x))
+print(data)
