@@ -90,14 +90,14 @@ def strategy(data):
     data['MINMAX_SPEED'] = MinMaxScaler().fit_transform(data[['SPEED']])[:, 0].astype('float16')  # test height
     data = data.sort_values(by=['ID', 'TRIP_ID', 'TIME']).reset_index(drop=True)
     # print(data.info(memory_usage='deep'))
-    print('2')
+    # print('2')
 
     ###创造新特征----------------------------------------------------
     hours = data['TIME'].apply(lambda x: datetime.datetime.fromtimestamp(x).hour)  # 获取驾驶的时间- 在某个小时
     data  =pd.concat([data,pd.DataFrame({'DRIVING_HOURS':hours,\
                                          'TIRED_DRIVING':np.zeros(data.shape[0])}).astype('int8')],axis=1)
     # print(data.info(memory_usage='deep'))
-    print('3')
+    # print('3')
     data.loc[((data.TIRED_DRIVING >= 0) & (data.TIRED_DRIVING <= 3) | \
               (data.TIRED_DRIVING >= 18) & (data.TIRED_DRIVING <= 20)), 'TIRED_DRIVING'] = 1  # 是疲劳驾驶
 
@@ -112,13 +112,13 @@ def strategy(data):
     trip_index = data.groupby(by=['ID', 'TRIP_ID']).apply(lambda x: x.index[0]).sort_values()
     data.loc[trip_index,:] = 0
     # print(data.info(memory_usage='deep'))
-    print('6')
+    # print('6')
 
     #转弯时速度
     data['SHAPE_TURN'] = np.zeros(data.shape[0]).astype('int8')  # 转弯时速度
     data.loc[((np.abs(data.DIR_DIF) >= 90) & (data.SPEED > 15)), 'SHAPE_TURN'] = 1
     # print(data.info(memory_usage='deep'))
-    print('7')
+    # print('7')
 
     #打电话时速度
     data['CALL_LEFT'] = data['CALLSTATE']
@@ -126,14 +126,14 @@ def strategy(data):
     data.loc[data.DIR_DIF >= -30, 'CALL_LEFT'] = 0
     data.loc[data.DIR_DIF <= 30, 'CALL_RIGHT'] = 0
     # print(data.info(memory_usage='deep'))
-    print('9')
+    # print('9')
 
     #坡度
-    data['SLOPE'] = data['HEIGHT_DIF'].astype('float16')
+    data['SLOPE'] = data['HEIGHT_DIF'].astype('float32')
     data.loc[(data.SPEED == 0), 'SLOPE'] = 0
     data.loc[(data.SPEED != 0), 'SLOPE'] = data['SLOPE'] / (data['SPEED'] * 16.67)
     # print(data.info(memory_usage='deep'))
-    print('10')
+    # print('10')
 
     #用户ID & Trip_ID
     group_data = data.groupby(by=['ID', 'TRIP_ID'])
@@ -141,7 +141,7 @@ def strategy(data):
     min_group_data = group_data.min().astype('float16')
     mean_group_data = group_data.mean().astype('float16')
     sum_group_data = group_data.sum().astype('float16')
-    print('11')
+    # print('11')
 
     max_data = max_group_data[['TIRED_DRIVING','LONGITUDE','LATITUDE','SPEED'\
         ,'SPEED_DIF','HEIGHT_DIF','DIR_DIF','SLOPE','SHAPE_TURN','CALL_LEFT','CALL_RIGHT']]
@@ -164,7 +164,7 @@ def strategy(data):
     new_data = pd.concat([max_data,min_data,mean_data,sum_data],axis=1).astype('float16')
     del max_data,min_data,mean_data,sum_data
     # print(new_data.info(memory_usage='deep'))
-    print('12')
+    # print('12')
 
     new_data['TTD'] = sum_group_data.SPEED.astype('float32') * 50 / 3  # 行驶路程
     new_data['DRIVING_HOURS'] = data[['ID', 'TRIP_ID', 'TIRED_DRIVING']] \
@@ -183,6 +183,7 @@ def strategy(data):
     if 'Y' in data.columns.tolist():
         new_data['Y'] = mean_group_data.Y
     # print(new_data.info(memory_usage='deep'))
+    CT.print_na(new_data)
     print('15')
     return new_data
 
