@@ -102,9 +102,11 @@ def strategy(data):
               (data.TIRED_DRIVING >= 18) & (data.TIRED_DRIVING <= 20)), 'TIRED_DRIVING'] = 1  # 是疲劳驾驶
 
     # 计算速度，高度，方向的才差值
-    data_diff = data[['SPEED','HEIGHT','DIRECTION']].diff().astype('float16')
-    data_diff.columns = ['SPEED_DIF','HEIGHT_DIF','DIR_DIF']
-    data = pd.concat([data,data_diff],axis=1)
+    data1_diff = data[['SPEED','HEIGHT']].diff().astype('float16')
+    data1_diff.columns = ['SPEED_DIF','HEIGHT_DIF']
+    data2_diff = data[['DIRECTION']].diff().astype('float32')
+    data2_diff.columns = ['DIR_DIF']
+    data = pd.concat([data,data1_diff,data2_diff],axis=1)
     data.loc[(data.DIR_DIF <= -180), 'DIR_DIF'] = \
         data.loc[(data.DIR_DIF < -180), 'DIR_DIF'] + 360
     data.loc[(data.DIR_DIF >= 180), 'DIR_DIF'] = \
